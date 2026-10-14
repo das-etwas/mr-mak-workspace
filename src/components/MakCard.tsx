@@ -3,6 +3,7 @@ import { entityHash } from '../lib/route'
 import { categoryIcon } from '../lib/categories'
 import { workspaceUrl } from '../lib/workspace'
 import { EntityStatusButton } from './EntityControls'
+import { Icon } from '../desktop/Icons'
 
 /**
  * The design-system card: glass surface over the aura, gradient edge
@@ -26,6 +27,15 @@ export default function MakCard({ entity }: { entity: WorkspaceEntity }) {
         </span>
         {entity.pinned && <span className="chip chip-pin">pinned</span>}
         {entity.unavailable && <span className="chip">Unavailable</span>}
+        {entity.workspacePath && (
+          <span
+            className="card-workspace-source"
+            title={`External workspace\n${entity.workspacePath}`}
+            aria-label={`External workspace: ${entity.workspacePath}`}
+          >
+            <Icon name="external" size={14} />
+          </span>
+        )}
       </div>
 
       <div className="card-project-title">

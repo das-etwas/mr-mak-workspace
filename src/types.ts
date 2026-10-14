@@ -32,6 +32,7 @@ export interface WorkspaceEntity {
   cardId?: string
   workspaceId?: string
   workspaceLabel?: string
+  workspacePath?: string
   workspaceBase?: string
   unavailable?: boolean
 }

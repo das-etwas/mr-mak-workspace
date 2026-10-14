@@ -12,6 +12,7 @@ const unavailable = (source, error) => ({
   type: 'group', category: 'project', status: 'active', pinned: false,
   created: '1970-01-01', folder: '', steps: [], unavailable: true,
   workspaceLabel: typeof source.label === 'string' && source.label ? source.label : 'External workspace',
+  workspacePath: typeof source.path === 'string' ? source.path : undefined,
 });
 
 // Owner-managed paths stay in ignored state. Manifests contain portable IDs and
@@ -66,7 +67,7 @@ export class WorkspaceRoots {
         activeGrants.set(workspaceRoot, grant);
         const workspaceBase = `${this.files.origin}/view/${grant}`;
         for (const entity of registry.entities) {
-          const merged = { ...entity, id: `${id}:${entity.id}`, cardId: entity.id, workspaceId: id, workspaceLabel: source.label || registry.title || path.basename(root), workspaceBase };
+          const merged = { ...entity, id: `${id}:${entity.id}`, cardId: entity.id, workspaceId: id, workspaceLabel: source.label || registry.title || path.basename(root), workspacePath: source.path, workspaceBase };
           entities.push(merged);
           records.set(merged.id, { entity, merged, workspace, workspaceRoot });
         }

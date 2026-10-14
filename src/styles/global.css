@@ -639,6 +639,13 @@ button:focus-visible {
   gap: 7px;
 }
 .card-top .status-dot { margin-left: auto; }
+.card-workspace-source {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  color: var(--text-dim);
+}
+.card-workspace-source:hover { color: var(--text); }
 
 .chip {
   display: inline-flex;
