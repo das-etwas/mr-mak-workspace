@@ -6,7 +6,7 @@ import { ZoomImage } from './ImagePreview'
 import { downloadImage } from '../lib/download'
 import ReportFrame from './ReportFrame'
 
-export default function ReportViewer({ url, title, relativePath }: { url: string; title: string; relativePath: string }) {
+export default function ReportViewer({ url, title, relativePath, entityId, stepIndex = 0 }: { url: string; title: string; relativePath: string; entityId?: string; stepIndex?: number }) {
   const markdown = /\.md$/i.test(relativePath)
   const image = /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(relativePath)
   const [file, setFile] = useState<Preview | null>(null)
@@ -21,7 +21,8 @@ export default function ReportViewer({ url, title, relativePath }: { url: string
   useEffect(() => {
     const controller = new AbortController()
     if (markdown && isDesktop) {
-      api<Preview>(`/preview?path=${encodeURIComponent(`${desktopState().repo}/${relativePath}`)}`).then(value => { if (!controller.signal.aborted) setFile(value) }).catch(error => { if (!controller.signal.aborted) setError(String(error.message || error)) })
+      const previewPath = entityId ? `/workspace/entities/${encodeURIComponent(entityId)}/preview?step=${stepIndex}` : `/preview?path=${encodeURIComponent(`${desktopState().repo}/${relativePath}`)}`
+      api<Preview>(previewPath).then(value => { if (!controller.signal.aborted) setFile(value) }).catch(error => { if (!controller.signal.aborted) setError(String(error.message || error)) })
     } else {
       fetch(url, { method: markdown ? 'GET' : 'HEAD', signal: controller.signal }).then(async response => {
         if (!response.ok) throw new Error(`Page unavailable (${response.status}).`)
@@ -31,7 +32,7 @@ export default function ReportViewer({ url, title, relativePath }: { url: string
       }).catch(error => { if (!controller.signal.aborted) setError(String(error.message || error)) })
     }
     return () => { controller.abort(); cancelAnimationFrame(paint.current) }
-  }, [url, title, relativePath, markdown])
+  }, [url, title, relativePath, markdown, entityId, stepIndex])
   if (error) return <div className="report-error"><strong>{title}</strong><p>{error}</p><a href={url} target="_blank" rel="noreferrer">Open source file</a></div>
   if (markdown) return file ? isDesktop ? <MarkdownDocument file={file} /> : <div className="markdown-reader"><MarkdownView text={file.text || ''} baseUrl={url} /></div> : <div className="report-loading">Opening document…</div>
   if (image) return <div className="report-image"><nav><span>{title}</span><a href={url} target="_blank" rel="noreferrer">Open original</a><a href={url} onClick={event => { event.preventDefault(); void downloadImage(url).catch(error => setError(error.message)) }}>Download</a></nav><ZoomImage src={url} alt={title} /></div>

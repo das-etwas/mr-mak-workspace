@@ -1,5 +1,12 @@
 # Authoring a Workspace card
 
+For a card owned by another project repository, follow
+[external workspaces](../docs/external-workspaces.md). Write the manifest and
+all report assets into that project's `workspace/`, then register its project
+root with `scripts/workspace-roots.mjs` in the main Mr. Mak repository. Keep
+its UUID stable and its report paths relative; absolute project paths belong
+only in the main repository's ignored local registration file.
+
 1. Read the current registry and reuse the relevant project or task card.
 2. Create a dated folder only for a new independent task. Keep sources and
    output media local to that task or its project folder.

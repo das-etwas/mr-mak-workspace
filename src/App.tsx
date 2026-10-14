@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { WorkspaceEntity } from './types'
-import { useWorkspace, archiveCutoff } from './lib/workspace'
+import { useWorkspace, archiveCutoff, workspaceUrl } from './lib/workspace'
 import { parseHash, entityHash, resolveStep, type Route } from './lib/route'
 import MakLogo from './components/MakLogo'
 import Sidebar from './components/Sidebar'
@@ -8,7 +8,7 @@ import Topbar from './components/Topbar'
 import HomeGrid from './components/HomeGrid'
 import EntityControls from './components/EntityControls'
 import ReportBoundary from './components/ReportBoundary'
-import { contentUrl, isDesktop } from './desktop/client'
+import { isDesktop } from './desktop/client'
 
 const Compare3D = lazy(() => import('./components/Compare3D'))
 const ReportViewer = lazy(() => import('./components/ReportViewer'))
@@ -42,7 +42,7 @@ export default function App() {
     ? resolveStep(entity.steps.length, route.step, entity.defaultStep)
     : -1
   const step = entity?.steps[stepIndex]
-  const reportUrl = entity && step ? contentUrl(`/workspace/${entity.folder}/${step.path}`) : null
+  const reportUrl = entity && step ? workspaceUrl(entity, `${entity.folder}/${step.path}`) : null
 
   // Hash → state: entity links navigate natively; this also covers back/forward.
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function App() {
   // while it is still inside the 7-day window. Otherwise it is the date rule,
   // which `pinned` overrides in the other direction.
   const isArchived = (e: WorkspaceEntity) =>
-    e.status === 'archived' || (!e.pinned && !e.sample && lastTouched(e) < cutoff)
+    !e.unavailable && (e.status === 'archived' || (!e.pinned && !e.sample && lastTouched(e) < cutoff))
   const matchesQuery = (e: WorkspaceEntity) =>
     !searching ||
     [e.title, e.description, e.category, e.id].some(s => s && s.toLowerCase().includes(q))
@@ -165,14 +165,16 @@ export default function App() {
 
         <div className="content">
           <ReportBoundary key={reportUrl || 'home'} onHome={goHome}>
-          {entity && reportUrl && step?.viewer === 'compare3d' ? (
+          {entity?.unavailable ? (
+            <section className="report-error" role="status"><strong>{entity.title} is unavailable</strong><p>{entity.description}</p><p>Restore its directory or update the local workspace registration. Its files and registration are preserved.</p></section>
+          ) : entity && reportUrl && step?.viewer === 'compare3d' ? (
             <Suspense fallback={<div className="boot"><MakLogo size={56} animated={false} /></div>}><Compare3D
               key={reportUrl}
               manifestUrl={reportUrl}
               baseUrl={reportUrl.slice(0, reportUrl.lastIndexOf('/'))}
             /></Suspense>
           ) : entity && reportUrl ? (
-            <Suspense fallback={<div className="boot"><MakLogo size={56} animated={false} /></div>}><ReportViewer key={reportUrl} url={reportUrl} title={step?.name ?? entity.title} relativePath={`workspace/${entity.folder}/${step?.path}`} /></Suspense>
+            <Suspense fallback={<div className="boot"><MakLogo size={56} animated={false} /></div>}><ReportViewer key={reportUrl} url={reportUrl} title={step?.name ?? entity.title} relativePath={`workspace/${entity.folder}/${step?.path}`} entityId={entity.workspaceBase ? entity.id : undefined} stepIndex={stepIndex} /></Suspense>
           ) : (
             <HomeGrid
               entities={entities}

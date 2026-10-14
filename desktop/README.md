@@ -21,6 +21,12 @@ builds the Tauri executable and platform installers. On Linux, use
 selects their own repository; its content is served from disk rather than baked
 into the installer.
 
+The desktop dashboard can also load registered workspace folders from other
+project repositories. Their portable card manifests and reports stay with those
+projects; local registrations stay under `.mrmak/`. See
+[external workspaces](../docs/external-workspaces.md) for agent-driven creation,
+registration, UUIDs, editing and unavailable-folder behavior.
+
 The service runs CLIs as the current user. Their available files and permissions
 follow their launch options and native account settings. Permission bypass is
 off by default. Do not expose the local service as a public web server.

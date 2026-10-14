@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { WorkspaceEntity, WorkspaceState } from '../types'
-import { api, isDesktop } from '../desktop/client'
+import { api, contentUrl, isDesktop } from '../desktop/client'
 
 const POLL_MS = 30_000
 const ARCHIVE_DAYS = 7
 
 export type EntityPatch = Partial<Pick<WorkspaceEntity, 'status' | 'category' | 'pinned'>>
+
+export const workspaceUrl = (entity: WorkspaceEntity, relative: string) =>
+  entity.workspaceBase ? `${entity.workspaceBase}/${relative}` : contentUrl(`/workspace/${relative}`)
 
 export async function updateWorkspaceEntity(id: string, patch: EntityPatch) {
   const route = `/workspace/entities/${encodeURIComponent(id)}`

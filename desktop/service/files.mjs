@@ -36,10 +36,12 @@ export async function serveFile(request, response, file, info, headers = {}) {
 }
 
 export class Files {
-  constructor(repo) { this.repo = repo; this.grants = new Map(); this.repoGrant = this.grant(repo); this.writes = Promise.resolve(); }
-  grant(root) {
-    for (const [token, value] of this.grants) if (value === root) return token;
-    const token = secret(); this.grants.set(token, root); return token;
+  constructor(repo) { this.repo = repo; this.grants = new Map(); this.pinnedGrants = new Map(); this.repoGrant = this.grant(repo); this.writes = Promise.resolve(); }
+  grant(root, { pinned = false } = {}) {
+    let token = [...this.grants].find(([, value]) => value === root)?.[0];
+    if (!token) { token = secret(); this.grants.set(token, root); }
+    if (pinned) this.pinnedGrants.set(token, path.resolve(root));
+    return token;
   }
   url(file) {
     const absolute = path.resolve(file);
@@ -108,6 +110,8 @@ export class Files {
   async content(request, response, url) {
     const match = /^\/view\/([\w-]+)\/(.*)$/.exec(url.pathname);
     if (!match || !this.grants.has(match[1])) throw Object.assign(new Error('Preview not found'), { status: 404 });
+    const pinned = this.pinnedGrants.get(match[1]);
+    if (pinned && path.relative(pinned, await realpath(this.grants.get(match[1]))) !== '') throw Object.assign(new Error('Workspace folder changed. Reload its registration.'), { status: 403 });
     const relative = decodeURIComponent(match[2]);
     if (relative.split(/[\\/]/).some(secretPart)) throw Object.assign(new Error('Private application files cannot be loaded by reports'), { status: 403 });
     const { file, info } = await realFile(this.grants.get(match[1]), relative);

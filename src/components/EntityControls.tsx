@@ -20,7 +20,7 @@ export function EntityStatusButton({ entity }: { entity: WorkspaceEntity }) {
       aria-haspopup="dialog"
       aria-expanded={controls?.editing === entity.id}
       title={`${labels[entity.status]} · ${isDesktop ? 'Change status or category' : 'Open the desktop app to edit this card'}`}
-      disabled={!isDesktop}
+      disabled={!isDesktop || entity.unavailable}
       onClick={event => controls?.open(entity, event.currentTarget)}
     >
       <span className={`status-dot ${entity.status}`} aria-hidden="true" />

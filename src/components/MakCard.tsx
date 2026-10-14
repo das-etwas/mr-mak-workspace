@@ -1,7 +1,7 @@
 import type { WorkspaceEntity } from '../types'
 import { entityHash } from '../lib/route'
 import { categoryIcon } from '../lib/categories'
-import { contentUrl } from '../desktop/client'
+import { workspaceUrl } from '../lib/workspace'
 import { EntityStatusButton } from './EntityControls'
 
 /**
@@ -25,18 +25,20 @@ export default function MakCard({ entity }: { entity: WorkspaceEntity }) {
           {entity.category || 'other'}
         </span>
         {entity.pinned && <span className="chip chip-pin">pinned</span>}
+        {entity.unavailable && <span className="chip">Unavailable</span>}
       </div>
 
       <div className="card-project-title">
-        {entity.icon && <img className="card-project-icon" src={contentUrl(`/workspace/${entity.folder}/${entity.icon}`)} width="48" height="48" alt="" loading="lazy" decoding="async" />}
+        {entity.icon && <img className="card-project-icon" src={workspaceUrl(entity, `${entity.folder}/${entity.icon}`)} width="48" height="48" alt="" loading="lazy" decoding="async" />}
         <h3 className="card-title">{entity.title}</h3>
       </div>
 
       {entity.description && <p className="card-desc">{entity.description}</p>}
+      {entity.workspaceLabel && <p className="card-desc">{entity.workspaceLabel}</p>}
 
       <div className="card-foot">
         <span>
-          {steps} step{steps === 1 ? '' : 's'}
+          {entity.unavailable ? 'Folder unavailable' : `${steps} step${steps === 1 ? '' : 's'}`}
         </span>
         <span>·</span>
         <span>{entity.updated ?? entity.created}</span>

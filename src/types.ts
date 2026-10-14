@@ -28,9 +28,17 @@ export interface WorkspaceEntity {
   pinned?: boolean
   /** Starter examples remain visible until explicitly archived. */
   sample?: boolean
+  /** Runtime-only source information; never written into card records. */
+  cardId?: string
+  workspaceId?: string
+  workspaceLabel?: string
+  workspaceBase?: string
+  unavailable?: boolean
 }
 
 export interface WorkspaceState {
+  workspaceId?: string
+  title?: string
   entities: WorkspaceEntity[]
 }
 

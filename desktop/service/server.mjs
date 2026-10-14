@@ -13,7 +13,8 @@ import { Attachments, attachmentText, MAX_IMAGE_BYTES } from './attachments.mjs'
 import { ContextLibrary } from './context.mjs';
 import { taskTitle } from './titles.mjs';
 import { taskEffort } from './effort.mjs';
-import { Workspace, localDay, metadataPatch } from './workspace.mjs';
+import { localDay, metadataPatch } from './workspace.mjs';
+import { WorkspaceRoots } from './workspace-roots.mjs';
 import { QuickActions } from './quick-actions.mjs';
 import { defaultVoiceStyle, voiceSession } from './voice-profile.mjs';
 import { NativeSettings } from './native-settings.mjs';
@@ -74,8 +75,8 @@ export async function createService({ repo, uiDir, stateDir, token = secret(), n
   const nativeSettings = new NativeSettings(native, value => broadcast('native-settings', value));
   const show = (window, extra = {}) => { native({ type: 'window', action: 'show', window }); broadcast('navigate', { window, ...extra }); };
   const focus = id => { sessions.get(id); selectedId = id; settings.selectedId = id; scheduleSettings(); show('chats', { sessionId: id }); return { selectedId: id }; };
-  const registry = async () => readJson(path.join(repo, 'workspace', 'workspace.json'), { entities: [] });
-  const workspace = new Workspace(repo, () => broadcast('workspace-changed', {}));
+  const workspace = new WorkspaceRoots(repo, stateDir, files, () => broadcast('workspace-changed', {}));
+  const registry = () => workspace.registry();
   const history = query => sessions.list().filter(item => !query || `${item.name} ${item.agent} ${item.cwd} ${item.preview || ''}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
   const closeChat = async id => {
     await sessions.remove(id);
@@ -209,6 +210,8 @@ export async function createService({ repo, uiDir, stateDir, token = secret(), n
           return json(response, 200, { repo, contentBase: `${files.origin}/view/${files.repoGrant}`, agents: inventory(), sessions: sessions.list(), settings, selectedId, notices, coordinator: coordinator.state, voice: { configured: !!(keys.OPENAI_API_KEY || keys.OPENAI_KEY || process.env.OPENAI_API_KEY), owner: voiceOwner }, voiceHistory, operations: [...coordinator.operations.values(), ...quick.operations.values()].sort((a, b) => a.at.localeCompare(b.at)).slice(-30) });
         }
         if (method === 'GET' && url.pathname === '/api/workspace') return json(response, 200, await registry());
+        const cardPreview = url.pathname.match(/^\/api\/workspace\/entities\/([^/]+)\/preview$/);
+        if (method === 'GET' && cardPreview) return json(response, 200, await workspace.preview(decodeURIComponent(cardPreview[1]), Number(url.searchParams.get('step') || 0)));
         const cardMetadata = url.pathname.match(/^\/api\/workspace\/entities\/([^/]+)$/);
         if (method === 'PATCH' && cardMetadata) return json(response, 200, await workspace.update(decodeURIComponent(cardMetadata[1]), metadataPatch(data)));
         if (method === 'GET' && url.pathname === '/api/projects') {
