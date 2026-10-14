@@ -16,6 +16,8 @@ struct ServiceJob(Mutex<Option<OwnedHandle>>);
 mod window_identity;
 #[cfg(windows)]
 mod win_key;
+#[cfg(windows)]
+mod window_layout;
 #[cfg(target_os = "macos")]
 mod mac_key;
 
@@ -205,6 +207,8 @@ fn make_windows(app: &tauri::AppHandle, workspace: &str, chats: &str) -> Result<
     }
     #[cfg(windows)]
     window_identity::refresh_shortcuts(app);
+    #[cfg(windows)]
+    if std::env::var("MRMAK_DISABLE_SNAP_RESTORE").ok().as_deref() != Some("1") { app.manage(window_layout::WindowLayout::start(app)?); }
     Ok(())
 }
 
@@ -410,6 +414,8 @@ fn main() {
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen { has_visible_windows: false, .. } = event { recall_all_windows(app); }
             if let tauri::RunEvent::Exit = event {
+                #[cfg(windows)]
+                if let Some(layout) = app.try_state::<window_layout::WindowLayout>() { layout.shutdown(); }
                 #[cfg(windows)]
                 if let Some(shortcut) = app.try_state::<win_key::WinKeyShortcut>() { shortcut.shutdown(); }
                 if let Some(mut child) = app.state::<Service>().0.lock().unwrap().take() {

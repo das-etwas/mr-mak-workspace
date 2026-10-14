@@ -5,6 +5,10 @@ service, binds it to loopback and gives each window the authenticated local URL.
 Workspace renders the React UI and report files. Chats renders real PTYs through
 xterm.js. The windows share sessions and settings but minimize independently.
 
+Window sizes, positions and maximized state persist between launches. Windows
+also restores the previous native Snap arrangement and pane proportions; see
+[window layout](../docs/window-layout.md) for behavior and verification.
+
 | Path | Responsibility |
 | --- | --- |
 | `src/` | React Workspace, document previews, files, chat and voice UI |
